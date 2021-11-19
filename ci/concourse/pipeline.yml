@@ -16,7 +16,7 @@ jobs:
 - name: build-cyberchef-docker
   plan:
   - get: cyberchef-docker-repo
-    trigger: true
+    trigger: false
   - task: build-image
     privileged: true # oci-build-task must run in a privileged container
     config:
