@@ -1,0 +1,41 @@
+resources:
+- name: cyberchef-docker-repo
+  type: git
+  source:
+    uri: https://github.com/rraumberger/cyberchef-docker.git
+    branch: main
+    icon: github
+
+- name: cyberchef-docker-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: ((image_repo_name))/cyberchef
+
+jobs:
+- name: build-cyberchef-docker
+  plan:
+  - get: cyberchef-docker-repo
+    trigger: true
+  - task: build-image
+    privileged: true # oci-build-task must run in a privileged container
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: rdclda/concourse-oci-build-task
+      params:
+        CONTEXT: cyberchef-docker-repo
+        BUILD_ARG_CYBERCHEF_VERSION: ((cyberchef_version))
+        IMAGE_PLATFORM: ((image_platform))
+      inputs:
+      - name: cyberchef-docker-repo
+      outputs:
+      - name: image
+      run:
+        path: build
+  - put: cyberchef-docker-image
+    params:
+      image: image/image.tar
+      version: ((cyberchef_version))
